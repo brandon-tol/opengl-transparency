@@ -85,7 +85,6 @@ int main(int argc, char **argv)
                 case GLFW_KEY_ESCAPE:
                     glfwSetWindowShouldClose(window, true);
                     break;
-
                 }
             }
         });
@@ -133,25 +132,28 @@ int main(int argc, char **argv)
     auto identity = glm::mat4{ 1.0f };
     glm::mat4 model, modelview;
 
+    glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    const int num_triangles = 5;
+
     while (!glfwWindowShouldClose(window))
     {
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        model = glm::translate(identity, glm::vec3{ -0.5f, 0.0f, 0.0f });
-        modelview = model * view;
-        program.set_uniform(uniform_type::MAT4, "modelview", &modelview);
-        glDrawElements(GL_TRIANGLES, triangle.size, GL_UNSIGNED_INT, nullptr);
-
-        model = glm::translate(identity, glm::vec3{ 0.0f, 0.0f, -3.0f });
-        modelview = model * view;
-        program.set_uniform(uniform_type::MAT4, "modelview", &modelview);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glBindVertexArray(triangle);
-        glDrawElements(GL_TRIANGLES, triangle.size, GL_UNSIGNED_INT, nullptr);
 
-        
+        for(int i = 0; i < num_triangles; i++)
+        {
+            for (int j = 0; j < num_triangles; j++)
+            {
+                model = glm::translate(identity, glm::vec3{ 2.0f * i - 1.0f * num_triangles, 0.0f, -1.0f * j });
+                modelview = model * view;
+                program.set_uniform(uniform_type::MAT4, "modelview", &modelview);
+                glDrawElements(GL_TRIANGLES, triangle.size, GL_UNSIGNED_INT, nullptr);
+            }
+        }
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }

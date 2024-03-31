@@ -8,6 +8,7 @@ namespace btoleda
     {
         NONE = 0,
         FLOAT,
+        UINT,
         INT,
         VEC2,
         VEC3,

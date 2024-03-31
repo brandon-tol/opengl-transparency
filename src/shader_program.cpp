@@ -89,15 +89,20 @@ namespace btoleda
 
     void shader_program::set_uniform(uniform_type t, const std::string& name, void *value)
     {
+        auto location = glGetUniformLocation(m_program_id, name.c_str());
+        if (location < 0)
+        {
+            throw std::runtime_error("ERROR::COULD NOT SET SHADER UNIFORM");
+        }
+
         switch (t)
         {
         case uniform_type::MAT4:
-            auto location = glGetUniformLocation(m_program_id, name.c_str());
-            if (location < 0)
-            {
-                throw std::runtime_error("ERROR::COULD NOT SET SHADER UNIFORM");
-            }
             glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(*(glm::mat4*)value));
+            return;
+
+        case uniform_type::INT:
+            glUniform1i(location, (int)value);
             return;
         }
     }

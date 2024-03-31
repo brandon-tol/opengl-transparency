@@ -56,12 +56,15 @@ set(SRC
     src/shader_program.cpp
     src/mesh.cpp
     src/camera.cpp
+    src/ping_pong_framebuffer.cpp
 )
 
 set(HEADERS
     src/shader_program.h
     src/mesh.h
     src/camera.h
+    src/ping_pong_framebuffer.h
+    src/core.h
 )
 
 

@@ -12,7 +12,6 @@
 #include "shader_program.h"
 #include "mesh.h"
 #include "camera.h"
-#include "ping_pong_framebuffer.h"
 #include "core.h"
 
 int main(int argc, char **argv)
@@ -111,13 +110,11 @@ int main(int argc, char **argv)
 
     // Create and compile our GLSL program from the shaders
     // shader_program program{ BTOLEDA_FILEPATH("/shaders/simple.vert.glsl"), BTOLEDA_FILEPATH("/shaders/simple.frag.glsl") };
-    shader_program program{BTOLEDA_FILEPATH("/shaders/depth_peeling.vert.glsl"), BTOLEDA_FILEPATH("/shaders/depth_peeling.frag.glsl")};
+    shader_program program{BTOLEDA_FILEPATH("/shaders/simple.vert.glsl"), BTOLEDA_FILEPATH("/shaders/simple.frag.glsl")};
     glUseProgram(program);
     program.set_uniform(uniform_type::MAT4, "u_perspective", &perspective);
 
-    ping_pong_framebuffer fb{width, height};
-
-    program.set_uniform(uniform_type::INT, "u_depth", 0);
+    //program.set_uniform(uniform_type::INT, "u_depth", 0);
 
     // Set the clear color
     auto identity = glm::mat4{1.0f};
@@ -131,38 +128,23 @@ int main(int argc, char **argv)
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glBindVertexArray(triangle);
 
-        const int NUM_DEPTH_PASSES = 3;
-        for (int p = 0; p < NUM_DEPTH_PASSES; p++)
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glEnable(GL_DEPTH_TEST);
+
+        int n = 5;
+        for (int i = 0; i < n; i++)
         {
-            for(int q = 0; q < 2; q++) {
-                glBindFramebuffer(GL_FRAMEBUFFER, fb.framebuffer_id(q));
-                glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-                glEnable(GL_DEPTH_TEST);
-
-                int n = 5;
-                for (int i = 0; i < n; i++)
-                {
-                    for (int j = 0; j < n; j++)
-                    {
-                        model = glm::translate(identity, glm::vec3{ 2.0f * i - 1.0f * n, 0.0f, -1.0f * j });
-                        modelview = model * view;
-                        program.set_uniform(uniform_type::MAT4, "u_modelview", &modelview);
-                        glDrawElements(GL_TRIANGLES, triangle.size, GL_UNSIGNED_INT, nullptr);
-                        BTOLEDA_DEBUG_GL();
-                    }
-                }
-
-                if (p | q)
-                {
-                    glBindTexture(GL_TEXTURE_2D, fb.depth_texture_id((q + 1) % 2));
-                }
+            for (int j = 0; j < n; j++)
+            {
+                model = glm::translate(identity, glm::vec3{ 2.0f * i - 1.0f * n, 0.0f, -1.0f * j });
+                modelview = model * view;
+                program.set_uniform(uniform_type::MAT4, "u_modelview", &modelview);
+                glDrawElements(GL_TRIANGLES, triangle.size, GL_UNSIGNED_INT, nullptr);
+                BTOLEDA_DEBUG_GL();
             }
         }
-
-        
-        fb.render_to(0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

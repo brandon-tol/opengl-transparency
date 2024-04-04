@@ -104,6 +104,31 @@ int main(int argc, char **argv)
     // Define mesh
     mesh triangle{vertices, indices};
 
+    std::vector<GLfloat> basic_quad_vertices{
+        -1.0f, -1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f,
+
+        1.0f, -1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f,
+
+        1.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f,
+
+        -1.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f
+    };
+
+    std::vector<GLuint> basic_quad_indices{
+        0, 1, 2,
+        2, 3, 0
+    };
+
+    mesh screen{ basic_quad_vertices, basic_quad_indices };
+
     glm::mat4 view = cam.view();
 
     glm::mat4 perspective = cam.perspective();
@@ -111,9 +136,9 @@ int main(int argc, char **argv)
     // Create and compile our GLSL program from the shaders
     // shader_program program{ BTOLEDA_FILEPATH("/shaders/simple.vert.glsl"), BTOLEDA_FILEPATH("/shaders/simple.frag.glsl") };
     shader_program program{BTOLEDA_FILEPATH("/shaders/simple.vert.glsl"), BTOLEDA_FILEPATH("/shaders/simple.frag.glsl")};
-    glUseProgram(program);
     program.set_uniform(uniform_type::MAT4, "u_perspective", &perspective);
 
+    shader_program from_framebuffer{ BTOLEDA_FILEPATH("/shaders/from_framebuffer.vert.glsl"), BTOLEDA_FILEPATH("/shaders/from_framebuffer.frag.glsl") };
     //program.set_uniform(uniform_type::INT, "u_depth", 0);
 
     // Set the clear color
@@ -122,16 +147,43 @@ int main(int argc, char **argv)
 
     glEnable(GL_DEPTH_TEST);
 
+    // To be abstracted
+    GLuint fb, tex, db;
+    glGenFramebuffers(1, &fb);
+    glBindFramebuffer(GL_FRAMEBUFFER, fb);
+
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
+
+    glGenRenderbuffers(1, &db);
+    glBindRenderbuffer(GL_RENDERBUFFER, db);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, db);
+
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+        return 1;
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
     while (!glfwWindowShouldClose(window))
     {
-        glUseProgram(program);
+        glBindFramebuffer(GL_FRAMEBUFFER, fb);
+
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glBindVertexArray(triangle);
 
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
         glEnable(GL_DEPTH_TEST);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         int n = 5;
         for (int i = 0; i < n; i++)
@@ -141,10 +193,21 @@ int main(int argc, char **argv)
                 model = glm::translate(identity, glm::vec3{ 2.0f * i - 1.0f * n, 0.0f, -1.0f * j });
                 modelview = model * view;
                 program.set_uniform(uniform_type::MAT4, "u_modelview", &modelview);
+                glUseProgram(program);
                 glDrawElements(GL_TRIANGLES, triangle.size, GL_UNSIGNED_INT, nullptr);
                 BTOLEDA_DEBUG_GL();
             }
         }
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glDisable(GL_DEPTH_TEST);
+        glClear(GL_COLOR_BUFFER_BIT);
+        
+        glUseProgram(from_framebuffer);
+        glBindVertexArray(screen);
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glDrawElements(GL_TRIANGLES, screen.size, GL_UNSIGNED_INT, nullptr);
+        BTOLEDA_DEBUG_GL();
 
         glfwSwapBuffers(window);
         glfwPollEvents();

@@ -89,6 +89,7 @@ namespace btoleda
 
     void shader_program::set_uniform(uniform_type t, const std::string& name, void *value)
     {
+        glUseProgram(m_program_id);
         auto location = glGetUniformLocation(m_program_id, name.c_str());
         if (location < 0)
         {
@@ -99,12 +100,13 @@ namespace btoleda
         {
         case uniform_type::MAT4:
             glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(*(glm::mat4*)value));
-            return;
+            break;
 
         case uniform_type::INT:
             glUniform1i(location, (int)value);
-            return;
+            break;
         }
+        glUseProgram(0);
     }
 
 }

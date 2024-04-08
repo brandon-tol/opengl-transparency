@@ -14,7 +14,31 @@
 #include "camera.h"
 #include "core.h"
 
-int main(int argc, char **argv)
+int main()
+{
+    using namespace btoleda;
+    glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    GLFWwindow* window = glfwCreateWindow(800, 600, "title", NULL, NULL);
+    glfwMakeContextCurrent(window);
+
+    std::cout << glewInit() << std::endl;
+    GLuint vao, vbo;
+
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+    glGenBuffers(1, &vbo);
+    while (!glfwWindowShouldClose(window))
+    {
+        glfwPollEvents();
+        glfwSwapBuffers(window);
+    }
+    return 0;
+}
+
+int main1(int argc, char **argv)
 {
     using namespace std;
     using namespace btoleda;
@@ -138,74 +162,149 @@ int main(int argc, char **argv)
     shader_program program{BTOLEDA_FILEPATH("/shaders/simple.vert.glsl"), BTOLEDA_FILEPATH("/shaders/simple.frag.glsl")};
     program.set_uniform(uniform_type::MAT4, "u_perspective", &perspective);
 
+    shader_program depth_peel{ BTOLEDA_FILEPATH("/shaders/depth_peel.vert.glsl"), BTOLEDA_FILEPATH("/shaders/depth_peel.frag.glsl") };
+    depth_peel.set_uniform(uniform_type::MAT4, "u_perspective", &perspective);
+
     shader_program from_framebuffer{ BTOLEDA_FILEPATH("/shaders/from_framebuffer.vert.glsl"), BTOLEDA_FILEPATH("/shaders/from_framebuffer.frag.glsl") };
     //program.set_uniform(uniform_type::INT, "u_depth", 0);
 
     // Set the clear color
-    auto identity = glm::mat4{1.0f};
     glm::mat4 model, modelview;
 
     glEnable(GL_DEPTH_TEST);
 
     // To be abstracted
-    GLuint fb, tex, db;
-    glGenFramebuffers(1, &fb);
-    glBindFramebuffer(GL_FRAMEBUFFER, fb);
+    GLuint fb1, frame1, db1, dd1;
+    glGenFramebuffers(1, &fb1);
+    glBindFramebuffer(GL_FRAMEBUFFER, fb1);
 
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glGenTextures(1, &frame1);
+    glBindTexture(GL_TEXTURE_2D, frame1);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, NULL);
     
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frame1, 0);
 
-    glGenRenderbuffers(1, &db);
-    glBindRenderbuffer(GL_RENDERBUFFER, db);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+    glGenTextures(1, &db1);
+    glBindTexture(GL_TEXTURE_2D, db1);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, db);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, db1, 0);
 
+    glGenTextures(1, &dd1);
+    glBindTexture(GL_TEXTURE_2D, dd1);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, NULL);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, dd1, 0);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+        BTOLEDA_LOG("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+        return 1; 
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    GLuint fb2, frame2, db2, dd2;
+    glGenFramebuffers(1, &fb2);
+    glBindFramebuffer(GL_FRAMEBUFFER, fb2);
+
+    glGenTextures(1, &frame2);
+    glBindTexture(GL_TEXTURE_2D, frame2);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, NULL);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frame2, 0);
+
+    glGenTextures(1, &db2);
+    glBindTexture(GL_TEXTURE_2D, db2);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, NULL);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, db2, 0);
+
+    glGenTextures(1, &dd2);
+    glBindTexture(GL_TEXTURE_2D, dd2);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, NULL);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, dd2, 0);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        BTOLEDA_LOG("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
         return 1;
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-
-    while (!glfwWindowShouldClose(window))
-    {
-        glBindFramebuffer(GL_FRAMEBUFFER, fb);
-
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glBindVertexArray(triangle);
-
-        glEnable(GL_DEPTH_TEST);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+    const auto render = [&model, &modelview, &view, &triangle](shader_program &prog) {
         int n = 5;
         for (int i = 0; i < n; i++)
         {
             for (int j = 0; j < n; j++)
             {
-                model = glm::translate(identity, glm::vec3{ 2.0f * i - 1.0f * n, 0.0f, -1.0f * j });
+                model = glm::translate(glm::mat4(1.0f), glm::vec3{2.0f * i - 1.0f * n, 0.0f, -1.0f * j});
                 modelview = model * view;
-                program.set_uniform(uniform_type::MAT4, "u_modelview", &modelview);
-                glUseProgram(program);
+                prog.set_uniform(uniform_type::MAT4, "u_modelview", &modelview);
+                glUseProgram(prog);
                 glDrawElements(GL_TRIANGLES, triangle.size, GL_UNSIGNED_INT, nullptr);
                 BTOLEDA_DEBUG_GL();
             }
         }
+    };
 
+    while (!glfwWindowShouldClose(window))
+    {
+        glEnable(GL_DEPTH_TEST);
+        glDepthMask(GL_TRUE);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        
+        // First pass
+        glBindFramebuffer(GL_FRAMEBUFFER, fb1);
+
+        GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_DEPTH_ATTACHMENT };
+        glDrawBuffers(3, drawBuffers);  // Draw to both attachments
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glBindVertexArray(triangle);
+        render(program);
+
+        // subsequent passes
+        glBindFramebuffer(GL_FRAMEBUFFER, fb2);
+
+        //GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+        //glDrawBuffers(2, drawBuffers);  // Draw to both attachments
+        glBindTexture(GL_TEXTURE_2D, dd1);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+         
+        glBindVertexArray(triangle);
+        render(depth_peel);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, fb1);
+        
+        //GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+        //glDrawBuffers(2, drawBuffers);  // Draw to both attachments
+        glBindTexture(GL_TEXTURE_2D, dd2);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glBindVertexArray(triangle);
+        render(depth_peel);
+        
+        // Render to screen
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glUseProgram(from_framebuffer);
         glDisable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT);
-        
-        glUseProgram(from_framebuffer);
         glBindVertexArray(screen);
-        glBindTexture(GL_TEXTURE_2D, tex);
+        glBindTexture(GL_TEXTURE_2D, frame1);
         glDrawElements(GL_TRIANGLES, screen.size, GL_UNSIGNED_INT, nullptr);
         BTOLEDA_DEBUG_GL();
 

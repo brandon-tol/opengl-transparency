@@ -21,12 +21,6 @@ namespace btoleda {
 		float aspect_ratio() const;
 		~window();
 
-		void set_resize_callback(const std::function<void(int width, int height)> &lambda);
-		void on_resize(int width, int height);
-
-		void set_key_callback(const std::function<void(int key, int press_type)> &lambda);
-		void on_keypress(int key, int press_type, int mods);
-
 		operator GLFWwindow* ()
 		{
 			return m_window.get();

@@ -23,12 +23,23 @@ namespace btoleda
 
 		glm::mat4 view() const;
 		glm::mat4 perspective() const;
+		void move(Direction d, float distance);
+		inline float speed() const
+		{
+			return m_speed;
+		}
+
+		inline void set_speed(float speed)
+		{
+			m_speed = speed;
+		}
 
 	private:
 		glm::vec3 m_origin;
-		glm::vec3 m_target;
+		glm::vec3 m_lookat;
 		glm::vec3 m_up;
 		float m_fov;
 		float m_aspect_ratio;
+		float m_speed;
 	};
 }

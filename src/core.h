@@ -7,7 +7,7 @@
         GLenum error = glGetError();                                 \
         if (error != GL_NO_ERROR)                                    \
         {                                                            \
-            printf("OpenGL Error: %s\n", glewGetErrorString(error)); \
+            printf("(Line %d) OpenGL Error: %s\n", __LINE__, glewGetErrorString(error)); \
         }                                                            \
     } while (0)
 

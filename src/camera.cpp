@@ -2,7 +2,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace btoleda {
-	camera::camera(const glm::vec3& origin, const glm::vec3& lookat, const glm::vec3& up, const float fov, const float aspect_ratio) : m_origin{origin}, m_lookat{lookat}, m_up{up}, m_fov{glm::radians(fov)}, m_aspect_ratio(aspect_ratio), m_speed{1.0}
+	camera::camera(const glm::vec3& origin, const glm::vec3& lookat, const glm::vec3& up, const float fov, const float aspect_ratio) : m_origin{origin}, m_lookat{lookat}, m_up{up}, m_fov{glm::radians(fov)}, m_aspect_ratio(aspect_ratio), m_speed{1.5}
 	{
 
 	}

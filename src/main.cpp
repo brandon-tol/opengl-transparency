@@ -48,10 +48,8 @@ int main(int argc, char **argv)
 #endif
 
     window win{ width, height, title };    
-    glfwSetWindowSizeCallback(win, [](GLFWwindow* window, int width, int height) {
-        glViewport(0, 0, width, height);
-        });
     glfwMakeContextCurrent(win);
+
 
     // Initialize GLEW
     glewExperimental = GL_TRUE;
@@ -62,7 +60,10 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    // Temporary arrays
+    glfwSetWindowSizeCallback(win, [](GLFWwindow* window, int width, int height) {
+        glViewport(0, 0, width, height);
+        });
+    // Triangle mesh ------------------------------------
     std::vector<GLfloat> triangle_vertices{
         // vertex 1
         -0.5f, -0.5f, 0.0f, // coords
@@ -71,19 +72,22 @@ int main(int argc, char **argv)
 
         0.5f, -0.5f, 0.0f,
         0.0f, 0.0f, 1.0f,
-        0.0f, 1.0f, 0.0f, 0.55f,
+        1.0f, 1.0f, 0.0f, 0.55f,
 
         0.0f, 0.5f, 0.0f,
         0.0f, 0.0f, 1.0f,
-        0.0f, 0.0f, 1.0f, 0.55f};
+        0.0f, 0.0f, 1.0f, 0.55f
+    };
 
     std::vector<GLuint> triangle_indices{
         // Triangle 1
-        0, 1, 2};
+        0, 1, 2
+    };
 
-    mesh triangle{triangle_vertices, triangle_indices};
-
-
+    mesh triangle{ triangle_vertices, triangle_indices };
+    // ---------------------------------------------------
+ 
+    // Screen mesh --------------------------------------
     std::vector<GLfloat> basic_quad_vertices{
         -1.0f, -1.0f, 0.0f,
         0.0f, 0.0f, 0.0f,
@@ -108,6 +112,7 @@ int main(int argc, char **argv)
     };
 
     mesh screen{ basic_quad_vertices, basic_quad_indices };
+    // ---------------------------------------------------
 
     // Create and compile our GLSL program from the shaders
     shader_program simple{BTOLEDA_FILEPATH("/shaders/simple.vert.glsl"), BTOLEDA_FILEPATH("/shaders/simple.frag.glsl")};
@@ -119,8 +124,6 @@ int main(int argc, char **argv)
     shader_program from_framebuffer{ BTOLEDA_FILEPATH("/shaders/from_framebuffer.vert.glsl"), BTOLEDA_FILEPATH("/shaders/from_framebuffer.frag.glsl") };
 
     glm::mat4 model, modelview;
-
-    glEnable(GL_DEPTH_TEST);
 
     // Create a framebuffer per peel for depth peeling
     const int num_passes = 5;
@@ -190,13 +193,13 @@ int main(int argc, char **argv)
 
     while (!glfwWindowShouldClose(win))
     {
-        delta = glfwGetTime() - last_frame;
-        last_frame = glfwGetTime();
-
+        float current_frame = glfwGetTime();
+        delta = current_frame - last_frame;
+        last_frame = current_frame;
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
         glDepthMask(GL_TRUE);
-        glClearColor(0.0f, 0.3f, 0.5f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         
         // First pass
         glBindFramebuffer(GL_FRAMEBUFFER, fb[0]);
@@ -231,7 +234,7 @@ int main(int argc, char **argv)
         glBindVertexArray(screen);
         for (int i = num_passes - 1; i >= 0; i--) 
         {
-            glBindTexture(GL_TEXTURE_2D, fb[0].frame());
+            glBindTexture(GL_TEXTURE_2D, fb[i].frame());
             glDrawElements(GL_TRIANGLES, screen.size, GL_UNSIGNED_INT, nullptr);
 
         }

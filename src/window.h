@@ -30,7 +30,5 @@ namespace btoleda {
 
 		std::unique_ptr <GLFWwindow, GLFWwindowDeleter> m_window;
 		int m_width, m_height;
-		std::function<void(int width, int height)> m_on_resize;
-		std::function<void(int key, int press_type)> m_on_keypress;
 	};
 }

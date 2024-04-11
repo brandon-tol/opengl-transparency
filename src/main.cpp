@@ -23,6 +23,8 @@ namespace btoleda {
     camera g_cam{ { 0.0f, 1.0f, -4.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f, 0.0f }, 90, (float)width/height };
     float last_frame = 0;
     float delta = 0;
+
+    int rendermode = 0;
 }
 
 int main(int argc, char **argv)
@@ -187,6 +189,34 @@ int main(int argc, char **argv)
             {
 				glfwSetWindowShouldClose(window, true);
 			}
+            else if (action == GLFW_PRESS && key == GLFW_KEY_1)
+            {
+                rendermode = rendermode > 0 ? 1 : -1;
+            }
+            else if (action == GLFW_PRESS && key == GLFW_KEY_2)
+            {
+				rendermode = rendermode > 0 ? 2 : -2;
+			}
+            else if (action == GLFW_PRESS && key == GLFW_KEY_3)
+            {
+				rendermode = rendermode > 0 ? 3 : -3;
+			}
+            else if (action == GLFW_PRESS && key == GLFW_KEY_4)
+            {
+				rendermode = rendermode > 0 ? 4 : -4;
+			}
+            else if (action == GLFW_PRESS && key == GLFW_KEY_5)
+            {
+                rendermode = rendermode > 0 ? 5 : -5;
+            }
+            else if (action == GLFW_PRESS && key == GLFW_KEY_0)
+            {
+				rendermode = 0;
+			}
+            else if (action == GLFW_PRESS && key == GLFW_KEY_MINUS)
+            {
+                rendermode = -rendermode;
+            }
         }
         });
     
@@ -227,16 +257,41 @@ int main(int argc, char **argv)
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glUseProgram(from_framebuffer);
         glDisable(GL_DEPTH_TEST);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        glClear(GL_COLOR_BUFFER_BIT);
-        glBindVertexArray(screen);
-        for (int i = num_passes - 1; i >= 0; i--) 
+        if (rendermode == 0)
         {
-            glBindTexture(GL_TEXTURE_2D, fb[i].frame());
-            glDrawElements(GL_TRIANGLES, screen.size, GL_UNSIGNED_INT, nullptr);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+            glClear(GL_COLOR_BUFFER_BIT);
+            glBindVertexArray(screen);
+            for (int i = num_passes - 1; i >= 0; i--) 
+            {
+                glBindTexture(GL_TEXTURE_2D, fb[i].frame());
+                glDrawElements(GL_TRIANGLES, screen.size, GL_UNSIGNED_INT, nullptr);
+
+            }
+        }
+        else if (rendermode < 0)
+        {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            glClear(GL_COLOR_BUFFER_BIT);
+            glBindVertexArray(screen);
+            for (int i = -rendermode - 1; i >= 0; i--)
+            {
+                glBindTexture(GL_TEXTURE_2D, fb[i].frame());
+                glDrawElements(GL_TRIANGLES, screen.size, GL_UNSIGNED_INT, nullptr);
+
+            }
+        }
+        else if (rendermode > 0)
+        {
+            glClear(GL_COLOR_BUFFER_BIT);
+            glBindVertexArray(screen);
+            glBindTexture(GL_TEXTURE_2D, fb[rendermode - 1].frame());
+            glDrawElements(GL_TRIANGLES, screen.size, GL_UNSIGNED_INT, nullptr);
         }
         
 

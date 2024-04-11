@@ -17,18 +17,79 @@
 #include "framebuffer.h"
 #include "window.h"
 
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tiny_obj_loader.h>
+
 namespace btoleda {
     // Build a camera
-    const int width = 1024;
-    const int height = 768;
+    const int g_width = 1024;
+    const int g_height = 768;
     camera g_cam{ { 0.0f, 1.0f, -4.0f }, { 0.0f, 1.0f, 0.0f }, 90, (float)width/height };
-    float last_frame = 0;
-    float delta = 0;
+    float g_last_frame = 0;
 
-    int rendermode = 0;
+    int g_rendermode = 0;
 
-    std::map<int, bool> keyStates;
+    std::map<int, bool> g_keydown;
 
+}
+
+static void loadObjFile(const std::string& inputfile, std::vector<GLfloat> object_vertices, std::vector<GLuint> object_indices) 
+{
+    tinyobj::ObjReaderConfig reader_config;
+    tinyobj::ObjReader reader;
+
+    if (!reader.ParseFromFile(inputfile, reader_config)) 
+    {
+        if (!reader.Error().empty())
+        {
+            std::cerr << "Tinyobjloader error: " << reader.Error();
+        }
+        exit(1);
+    }
+
+    if (!reader.Warning().empty())
+    {
+        std::cout << "Tinyobjloader warning: " << reader.Warning();
+    }
+
+    const tinyobj::attrib_t& attrib = reader.GetAttrib();
+    const std::vector<tinyobj::shape_t>& shapes = reader.GetShapes();
+
+    // Iterate through shapes
+    for (size_t s = 0; s < shapes.size(); s++)
+    {
+        const tinyobj::mesh_t& mesh = shapes[s].mesh;
+
+        // Iterate through vertices
+        for (size_t v = 0; v < mesh.indices.size(); v++)
+        {
+            tinyobj::index_t idx = mesh.indices[v];
+
+            // Default color
+            // You can set these to any default color you want
+            float default_color[] = { 1.0f, 1.0f, 1.0f, 0.55f };
+
+            // Append vertex position, normal, texture coordinates, and color to vertex array
+            object_vertices.push_back(attrib.vertices[3 * idx.vertex_index + 0]);
+            object_vertices.push_back(attrib.vertices[3 * idx.vertex_index + 1]);
+            object_vertices.push_back(attrib.vertices[3 * idx.vertex_index + 2]);
+            object_vertices.push_back(0.0f); // Default normal (since OBJ file doesn't have normal)
+            object_vertices.push_back(0.0f); // Default normal (since OBJ file doesn't have normal)
+            object_vertices.push_back(1.0f); // Default normal (since OBJ file doesn't have normal)
+            object_vertices.push_back(default_color[0]);
+            object_vertices.push_back(default_color[1]);
+            object_vertices.push_back(default_color[2]);
+            object_vertices.push_back(default_color[3]);
+
+        }
+
+        // Construct indices array
+        for (size_t f = 0; f < mesh.num_face_vertices.size(); f++) {
+            object_indices.push_back(mesh.indices[3 * f + 0].vertex_index);
+            object_indices.push_back(mesh.indices[3 * f + 1].vertex_index);
+            object_indices.push_back(mesh.indices[3 * f + 2].vertex_index);
+        }
+    }
 }
 
 int main(int argc, char **argv)
@@ -162,30 +223,46 @@ int main(int argc, char **argv)
         }
     };
 
+    std::vector<GLfloat> teapot_vertices;
+    std::vector<GLuint> teapot_indices;
+    loadObjFile("../assets/teapot1.obj", teapot_vertices, teapot_indices);
+    mesh teapot{ teapot_vertices, teapot_indices, false };
+
+    const auto render_teapot = [&teapot](shader_program& prog)
+        {
+			glBindVertexArray(teapot);
+			glm::mat4 modelview = g_cam.view();
+			prog.set_uniform(uniform_type::MAT4, "u_modelview", &modelview);
+			glm::mat4 perspective = g_cam.perspective();
+			prog.set_uniform(uniform_type::MAT4, "u_perspective", &perspective);
+			glUseProgram(prog);
+			glDrawElements(GL_TRIANGLES, teapot.size, GL_UNSIGNED_INT, nullptr);
+		};
+
     glfwSetKeyCallback(win, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
             if (key == GLFW_KEY_W)
             {
-                keyStates[GLFW_KEY_W] = action != GLFW_RELEASE;
+                g_keydown[GLFW_KEY_W] = action != GLFW_RELEASE;
             }
             else if (key == GLFW_KEY_S)
             {
-				keyStates[GLFW_KEY_S] = action != GLFW_RELEASE;
+				g_keydown[GLFW_KEY_S] = action != GLFW_RELEASE;
 			}
             else if (key == GLFW_KEY_A)
             {
-			    keyStates[GLFW_KEY_A] = action != GLFW_RELEASE;
+			    g_keydown[GLFW_KEY_A] = action != GLFW_RELEASE;
 			}
             else if (key == GLFW_KEY_D)
             {
-				keyStates[GLFW_KEY_D] = action != GLFW_RELEASE;
+				g_keydown[GLFW_KEY_D] = action != GLFW_RELEASE;
 			}
             else if (key == GLFW_KEY_LEFT_CONTROL)
             {
-				keyStates[GLFW_KEY_LEFT_CONTROL] = action != GLFW_RELEASE;
+				g_keydown[GLFW_KEY_LEFT_CONTROL] = action != GLFW_RELEASE;
 			}
             else if (key == GLFW_KEY_SPACE)
             {
-				keyStates[GLFW_KEY_SPACE] = action != GLFW_RELEASE;
+				g_keydown[GLFW_KEY_SPACE] = action != GLFW_RELEASE;
             }
             else if (action == GLFW_PRESS && key == GLFW_KEY_ESCAPE)
             {
@@ -193,31 +270,31 @@ int main(int argc, char **argv)
 			}
             else if (action == GLFW_PRESS && key == GLFW_KEY_1)
             {
-                rendermode = rendermode > 0 ? 1 : -1;
+                g_rendermode = g_rendermode > 0 ? 1 : -1;
             }
             else if (action == GLFW_PRESS && key == GLFW_KEY_2)
             {
-				rendermode = rendermode > 0 ? 2 : -2;
+				g_rendermode = g_rendermode > 0 ? 2 : -2;
 			}
             else if (action == GLFW_PRESS && key == GLFW_KEY_3)
             {
-				rendermode = rendermode > 0 ? 3 : -3;
+				g_rendermode = g_rendermode > 0 ? 3 : -3;
 			}
             else if (action == GLFW_PRESS && key == GLFW_KEY_4)
             {
-				rendermode = rendermode > 0 ? 4 : -4;
+				g_rendermode = g_rendermode > 0 ? 4 : -4;
 			}
             else if (action == GLFW_PRESS && key == GLFW_KEY_5)
             {
-                rendermode = rendermode > 0 ? 5 : -5;
+                g_rendermode = g_rendermode > 0 ? 5 : -5;
             }
             else if (action == GLFW_PRESS && key == GLFW_KEY_0)
             {
-				rendermode = 0;
+				g_rendermode = 0;
 			}
             else if (action == GLFW_PRESS && key == GLFW_KEY_MINUS)
             {
-                rendermode = -rendermode;
+                g_rendermode = -g_rendermode;
             }
         });
 
@@ -248,28 +325,28 @@ int main(int argc, char **argv)
 
     while (!glfwWindowShouldClose(win))
     {
-        auto render = render_triangles;
-        if (keyStates[GLFW_KEY_W]) {
+        float delta = glfwGetTime() - g_last_frame;
+        g_last_frame = glfwGetTime();
+        auto render = render_teapot;
+        if (g_keydown[GLFW_KEY_W]) {
             g_cam.move(FORWARD, g_cam.speed() * delta);
         }
-        if (keyStates[GLFW_KEY_S]) {
+        if (g_keydown[GLFW_KEY_S]) {
             g_cam.move(BACKWARD, g_cam.speed() * delta);
         }
-        if (keyStates[GLFW_KEY_A]) {
+        if (g_keydown[GLFW_KEY_A]) {
             g_cam.move(LEFT, g_cam.speed() * delta);
         }
-        if (keyStates[GLFW_KEY_D]) {
+        if (g_keydown[GLFW_KEY_D]) {
             g_cam.move(RIGHT, g_cam.speed() * delta);
         }
-        if (keyStates[GLFW_KEY_LEFT_CONTROL]) {
+        if (g_keydown[GLFW_KEY_LEFT_CONTROL]) {
             g_cam.move(DOWN, g_cam.speed() * delta);
         }
-        if (keyStates[GLFW_KEY_SPACE]) {
+        if (g_keydown[GLFW_KEY_SPACE]) {
             g_cam.move(UP, g_cam.speed() * delta);
         }
-        float current_frame = glfwGetTime();
-        delta = current_frame - last_frame;
-        last_frame = current_frame;
+       
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
         glDepthMask(GL_TRUE);
@@ -302,7 +379,7 @@ int main(int argc, char **argv)
         glUseProgram(from_framebuffer);
         glDisable(GL_DEPTH_TEST);
 
-        if (rendermode == 0)
+        if (g_rendermode == 0)
         {
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -316,25 +393,25 @@ int main(int argc, char **argv)
 
             }
         }
-        else if (rendermode < 0)
+        else if (g_rendermode < 0)
         {
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             glClear(GL_COLOR_BUFFER_BIT);
             glBindVertexArray(screen);
-            for (int i = -rendermode - 1; i >= 0; i--)
+            for (int i = -g_rendermode - 1; i >= 0; i--)
             {
                 glBindTexture(GL_TEXTURE_2D, fb[i].frame());
                 glDrawElements(GL_TRIANGLES, screen.size, GL_UNSIGNED_INT, nullptr);
 
             }
         }
-        else if (rendermode > 0)
+        else if (g_rendermode > 0)
         {
             glClear(GL_COLOR_BUFFER_BIT);
             glBindVertexArray(screen);
-            glBindTexture(GL_TEXTURE_2D, fb[rendermode - 1].frame());
+            glBindTexture(GL_TEXTURE_2D, fb[g_rendermode - 1].frame());
             glDrawElements(GL_TRIANGLES, screen.size, GL_UNSIGNED_INT, nullptr);
         }
         

@@ -70,7 +70,7 @@ set(HEADERS
 )
 
 # file(GLOB EXTERNALS external/*.cpp external/*.h)
-# include_directories(external)
+include_directories(external)
 
 
 # NOTE: ENCS glm installation is missing links to *.inl files so we need this line

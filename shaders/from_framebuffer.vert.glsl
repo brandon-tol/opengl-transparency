@@ -1,11 +1,12 @@
 #version 330 core
 
-out vec2 tex_coord;
+out vec2 v_tex_coord;
 
-layout (location = 0) in vec3 a_position; 
+layout (location = 0) in vec3 a_position;
+layout (location = 2) in vec2 a_tex_coord;
 
 void main() {
     gl_Position = vec4(a_position, 1.0);
-    tex_coord = vec2((1.0f + a_position.x) * 0.5f, (1.0f + a_position.y) * 0.5f);
+    v_tex_coord = a_tex_coord;
 
 }

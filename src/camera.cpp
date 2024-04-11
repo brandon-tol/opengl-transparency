@@ -2,9 +2,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace btoleda {
-	camera::camera(const glm::vec3& origin, const glm::vec3& lookat, const glm::vec3& up, const float fov, const float aspect_ratio) : m_origin{origin}, m_lookat{lookat}, m_up{up}, m_fov{glm::radians(fov)}, m_aspect_ratio(aspect_ratio), m_speed{1.5}, m_yaw{0.0f}, m_pitch{0.0f}
+	camera::camera(const glm::vec3& origin, const glm::vec3& up, const float fov, const float aspect_ratio, const float yaw, const float pitch) : m_origin{origin}, m_up{up}, m_fov{fov}, m_aspect_ratio(aspect_ratio), m_speed{1.5}, m_yaw{yaw}, m_pitch{pitch}
 	{
-
+		autoset_lookat();
 	}
 
 	camera::~camera() = default;
@@ -16,7 +16,7 @@ namespace btoleda {
 
 	glm::mat4 camera::perspective() const
 	{
-		return glm::perspective<float>(m_fov, m_aspect_ratio, 0.001, 1000.0);
+		return glm::perspective<float>(glm::radians(m_fov), m_aspect_ratio, 0.001, 1000.0);
 	}
 
 	void camera::move(Direction d, float distance)
@@ -60,11 +60,25 @@ namespace btoleda {
 		if (m_pitch < -89.0f)
 			m_pitch = -89.0f;
 
-		glm::vec3 direction;
-		direction.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
-		direction.y = sin(glm::radians(m_pitch));
-		direction.z = sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
-		m_lookat = glm::normalize(direction);
+		autoset_lookat();
+	}
+
+	void camera::zoom(double y_offset, double sensitivity)
+	{
+		m_fov -= y_offset * sensitivity;
+		if (m_fov < 1.0f)
+			m_fov = 1.0f;
+		if (m_fov > 90.0f)
+			m_fov = 90.0f;
+	}
+
+	void camera::autoset_lookat()
+	{
+		glm::vec3 lookat;
+		lookat.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
+		lookat.y = sin(glm::radians(m_pitch));
+		lookat.z = sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
+		m_lookat = glm::normalize(lookat);
 	}
 
 } // btoleda

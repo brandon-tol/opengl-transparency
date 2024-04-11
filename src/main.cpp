@@ -21,7 +21,7 @@ namespace btoleda {
     // Build a camera
     const int width = 1024;
     const int height = 768;
-    camera g_cam{ { 0.0f, 1.0f, -4.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f, 0.0f }, 90, (float)width/height };
+    camera g_cam{ { 0.0f, 1.0f, -4.0f }, { 0.0f, 1.0f, 0.0f }, 90, (float)width/height };
     float last_frame = 0;
     float delta = 0;
 
@@ -97,19 +97,19 @@ int main(int argc, char **argv)
     std::vector<GLfloat> basic_quad_vertices{
         -1.0f, -1.0f, 0.0f,
         0.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f,
 
         1.0f, -1.0f, 0.0f,
         0.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 0.0f,
+        1.0f, 0.0f,
 
         1.0f, 1.0f, 0.0f,
         0.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 0.0f,
+        1.0f, 1.0f,
 
         -1.0f, 1.0f, 0.0f,
         0.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 0.0f
+        0.0f, 1.0f,
     };
 
     std::vector<GLuint> basic_quad_indices{
@@ -117,7 +117,7 @@ int main(int argc, char **argv)
         2, 3, 0
     };
 
-    mesh screen{ basic_quad_vertices, basic_quad_indices, false };
+    mesh screen{ basic_quad_vertices, basic_quad_indices, true };
     // ---------------------------------------------------
 
     // Create and compile our GLSL program from the shaders
@@ -237,9 +237,12 @@ int main(int argc, char **argv)
         float yoffset = lastY - ypos;
         lastX = xpos;
         lastY = ypos;
-        double sensitivity = 0.1;
 
-        g_cam.rotate(xoffset, yoffset, sensitivity);
+        g_cam.rotate(xoffset, yoffset);
+        });
+
+    glfwSetScrollCallback(win, [](GLFWwindow* window, double xoffset, double yoffset) {
+        g_cam.zoom(yoffset);
         });
     
 

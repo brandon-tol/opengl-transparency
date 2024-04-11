@@ -31,7 +31,7 @@ namespace btoleda
         if (!success)
         {
             glGetShaderInfoLog(m_program_id, 512, NULL, infoLog);
-            std::cerr << "Vertex shader compilation failed...\n"
+            std::cerr << vert << "::Vertex shader compilation failed...\n"
                 << infoLog << std::endl;
             throw std::runtime_error("Vertex shader compilation failed.");
         }
@@ -41,7 +41,7 @@ namespace btoleda
         if (!success)
         {
             glGetShaderInfoLog(m_program_id, 512, NULL, infoLog);
-            std::cerr << "Fragment shader compilation failed...\n"
+            std::cerr << frag << "::Fragment shader compilation failed...\n"
                 << infoLog << std::endl;
             throw std::runtime_error("Fragment shader compilation failed.");
         }

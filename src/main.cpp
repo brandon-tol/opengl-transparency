@@ -1,6 +1,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <map>
 
 #define GLEW_STATIC 1
 #include <GL/glew.h>
@@ -25,6 +26,14 @@ namespace btoleda {
     float delta = 0;
 
     int rendermode = 0;
+
+    struct KeyState
+    {
+        bool pressed;
+    };
+
+    std::map<int, KeyState> keyStates;
+
 }
 
 int main(int argc, char **argv)
@@ -147,7 +156,7 @@ int main(int argc, char **argv)
             for (int j = 0; j < n; j++)
             {
                 model = glm::translate(glm::mat4(1.0f), glm::vec3{2.0f * i - 1.0f * n, 0.0f, -1.0f * j});
-                modelview = model * g_cam.view();
+                modelview = g_cam.view() * model;
                 prog.set_uniform(uniform_type::MAT4, "u_modelview", &modelview);
                 glm::mat4 perspective = g_cam.perspective();
                 prog.set_uniform(uniform_type::MAT4, "u_perspective", &perspective);
@@ -159,33 +168,31 @@ int main(int argc, char **argv)
     };
 
     glfwSetKeyCallback(win, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
-        if (action == GLFW_PRESS || action == GLFW_REPEAT)
-        {
             if (key == GLFW_KEY_W)
             {
-                g_cam.move(FORWARD, g_cam.speed() * delta);
+                keyStates[GLFW_KEY_W].pressed = action != GLFW_RELEASE;
             }
             else if (key == GLFW_KEY_S)
             {
-				g_cam.move(BACKWARD, g_cam.speed() * delta);
+				keyStates[GLFW_KEY_S].pressed = action != GLFW_RELEASE;
 			}
             else if (key == GLFW_KEY_A)
             {
-				g_cam.move(LEFT, g_cam.speed() * delta);
+			    keyStates[GLFW_KEY_A].pressed = action != GLFW_RELEASE;
 			}
             else if (key == GLFW_KEY_D)
             {
-				g_cam.move(RIGHT, g_cam.speed() * delta);
+				keyStates[GLFW_KEY_D].pressed = action != GLFW_RELEASE;
 			}
             else if (key == GLFW_KEY_LEFT_CONTROL)
             {
-				g_cam.move(DOWN, g_cam.speed() * delta);
+				keyStates[GLFW_KEY_LEFT_CONTROL].pressed = action != GLFW_RELEASE;
 			}
             else if (key == GLFW_KEY_SPACE)
             {
-				g_cam.move(UP, g_cam.speed() * delta);
+				keyStates[GLFW_KEY_SPACE].pressed = action != GLFW_RELEASE;
             }
-            else if (key == GLFW_KEY_ESCAPE)
+            else if (action == GLFW_PRESS && key == GLFW_KEY_ESCAPE)
             {
 				glfwSetWindowShouldClose(window, true);
 			}
@@ -217,12 +224,50 @@ int main(int argc, char **argv)
             {
                 rendermode = -rendermode;
             }
+        });
+
+    glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(win, [](GLFWwindow* window, double xpos, double ypos) {
+        static bool firstMouse = true;
+        static float lastX = 0;
+        static float lastY = 0;
+        if (firstMouse)
+        {
+            lastX = xpos;
+            lastY = ypos;
+            firstMouse = false;
         }
+
+        float xoffset = xpos - lastX;
+        float yoffset = lastY - ypos;
+        lastX = xpos;
+        lastY = ypos;
+        double sensitivity = 0.1;
+
+        g_cam.rotate(xoffset, yoffset, sensitivity);
         });
     
 
     while (!glfwWindowShouldClose(win))
     {
+        if (keyStates[GLFW_KEY_W].pressed) {
+            g_cam.move(FORWARD, g_cam.speed() * delta);
+        }
+        if (keyStates[GLFW_KEY_S].pressed) {
+            g_cam.move(BACKWARD, g_cam.speed() * delta);
+        }
+        if (keyStates[GLFW_KEY_A].pressed) {
+            g_cam.move(LEFT, g_cam.speed() * delta);
+        }
+        if (keyStates[GLFW_KEY_D].pressed) {
+            g_cam.move(RIGHT, g_cam.speed() * delta);
+        }
+        if (keyStates[GLFW_KEY_LEFT_CONTROL].pressed) {
+            g_cam.move(DOWN, g_cam.speed() * delta);
+        }
+        if (keyStates[GLFW_KEY_SPACE].pressed) {
+            g_cam.move(UP, g_cam.speed() * delta);
+        }
         float current_frame = glfwGetTime();
         delta = current_frame - last_frame;
         last_frame = current_frame;

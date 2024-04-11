@@ -24,6 +24,8 @@ namespace btoleda
 		glm::mat4 view() const;
 		glm::mat4 perspective() const;
 		void move(Direction d, float distance);
+		void rotate(double x_offset, double y_offset, double sensitivity);
+
 		inline float speed() const
 		{
 			return m_speed;
@@ -41,5 +43,8 @@ namespace btoleda
 		float m_fov;
 		float m_aspect_ratio;
 		float m_speed;
+
+		float m_pitch;
+		float m_yaw;
 	};
 }

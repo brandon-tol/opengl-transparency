@@ -90,7 +90,7 @@ int main(int argc, char **argv)
         0, 1, 2
     };
 
-    mesh triangle{ triangle_vertices, triangle_indices };
+    mesh triangle{ triangle_vertices, triangle_indices, false };
     // ---------------------------------------------------
  
     // Screen mesh --------------------------------------
@@ -117,7 +117,7 @@ int main(int argc, char **argv)
         2, 3, 0
     };
 
-    mesh screen{ basic_quad_vertices, basic_quad_indices };
+    mesh screen{ basic_quad_vertices, basic_quad_indices, false };
     // ---------------------------------------------------
 
     // Create and compile our GLSL program from the shaders

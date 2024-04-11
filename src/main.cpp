@@ -27,12 +27,7 @@ namespace btoleda {
 
     int rendermode = 0;
 
-    struct KeyState
-    {
-        bool pressed;
-    };
-
-    std::map<int, KeyState> keyStates;
+    std::map<int, bool> keyStates;
 
 }
 
@@ -148,7 +143,7 @@ int main(int argc, char **argv)
 
     BTOLEDA_DEBUG_GL();
 
-    const auto render = [&model, &modelview, &triangle](shader_program& prog) {
+    const auto render_triangles = [&model, &modelview, &triangle](shader_program& prog) {
         glBindVertexArray(triangle);
         int n = 5;
         for (int i = 0; i < n; i++)
@@ -170,27 +165,27 @@ int main(int argc, char **argv)
     glfwSetKeyCallback(win, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
             if (key == GLFW_KEY_W)
             {
-                keyStates[GLFW_KEY_W].pressed = action != GLFW_RELEASE;
+                keyStates[GLFW_KEY_W] = action != GLFW_RELEASE;
             }
             else if (key == GLFW_KEY_S)
             {
-				keyStates[GLFW_KEY_S].pressed = action != GLFW_RELEASE;
+				keyStates[GLFW_KEY_S] = action != GLFW_RELEASE;
 			}
             else if (key == GLFW_KEY_A)
             {
-			    keyStates[GLFW_KEY_A].pressed = action != GLFW_RELEASE;
+			    keyStates[GLFW_KEY_A] = action != GLFW_RELEASE;
 			}
             else if (key == GLFW_KEY_D)
             {
-				keyStates[GLFW_KEY_D].pressed = action != GLFW_RELEASE;
+				keyStates[GLFW_KEY_D] = action != GLFW_RELEASE;
 			}
             else if (key == GLFW_KEY_LEFT_CONTROL)
             {
-				keyStates[GLFW_KEY_LEFT_CONTROL].pressed = action != GLFW_RELEASE;
+				keyStates[GLFW_KEY_LEFT_CONTROL] = action != GLFW_RELEASE;
 			}
             else if (key == GLFW_KEY_SPACE)
             {
-				keyStates[GLFW_KEY_SPACE].pressed = action != GLFW_RELEASE;
+				keyStates[GLFW_KEY_SPACE] = action != GLFW_RELEASE;
             }
             else if (action == GLFW_PRESS && key == GLFW_KEY_ESCAPE)
             {
@@ -250,22 +245,23 @@ int main(int argc, char **argv)
 
     while (!glfwWindowShouldClose(win))
     {
-        if (keyStates[GLFW_KEY_W].pressed) {
+        auto render = render_triangles;
+        if (keyStates[GLFW_KEY_W]) {
             g_cam.move(FORWARD, g_cam.speed() * delta);
         }
-        if (keyStates[GLFW_KEY_S].pressed) {
+        if (keyStates[GLFW_KEY_S]) {
             g_cam.move(BACKWARD, g_cam.speed() * delta);
         }
-        if (keyStates[GLFW_KEY_A].pressed) {
+        if (keyStates[GLFW_KEY_A]) {
             g_cam.move(LEFT, g_cam.speed() * delta);
         }
-        if (keyStates[GLFW_KEY_D].pressed) {
+        if (keyStates[GLFW_KEY_D]) {
             g_cam.move(RIGHT, g_cam.speed() * delta);
         }
-        if (keyStates[GLFW_KEY_LEFT_CONTROL].pressed) {
+        if (keyStates[GLFW_KEY_LEFT_CONTROL]) {
             g_cam.move(DOWN, g_cam.speed() * delta);
         }
-        if (keyStates[GLFW_KEY_SPACE].pressed) {
+        if (keyStates[GLFW_KEY_SPACE]) {
             g_cam.move(UP, g_cam.speed() * delta);
         }
         float current_frame = glfwGetTime();

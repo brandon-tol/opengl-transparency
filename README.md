@@ -19,10 +19,12 @@ cmake ..
 For the sake of this project, the build was generated in Visual Studio 2022 and Visual Studio 2019.
 
 ## Run
-*For the scope of this project, all paths and objects are hard-coded into the program. 
+*For the scope of this project, all default paths and objects are hard-coded into the program. 
 However, feel free to play with the code as much as your heart desires. It's very simplistic and the classes are simple to use (albeit not very well encapsulated).*
 
-Run with no command line arguments.
+If you choose to apply your own texture to the windows, you can specify that by running the executable with the filepath of the texture as a command line argument. Note that the texture must be in RGBA format (.png files work best).
+
+Otherwise, run with no command line arguments and the default texture will be applied.
 
 ## Controls:
 * `1`-`5` will display that "depth layer" which is being rendered (with 1 being the first and frontmost and 5 being the furthest back).

@@ -17,9 +17,6 @@
 #include "framebuffer.h"
 #include "window.h"
 
-//#define TINYOBJLOADER_IMPLEMENTATION
-//#include <tiny_obj_loader.h>
-
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
@@ -40,6 +37,8 @@ int main(int argc, char** argv)
 {
 	using namespace std;
 	using namespace btoleda;
+
+	string texture_path = argc > 1 ? argv[1] : BTOLEDA_FILEPATH("/assets/texture.png");
 
 	const string title = "Depth Peeling Demo";
 
@@ -74,21 +73,6 @@ int main(int argc, char** argv)
 	glfwSetWindowSizeCallback(win, [](GLFWwindow* window, int width, int height) {
 		glViewport(0, 0, width, height);
 		});
-	// Triangle mesh ------------------------------------
-	//std::vector<GLfloat> triangle_vertices{
-	//	// vertex 1
-	//	-0.5f, -0.5f, 0.0f, // coords
-	//	0.0f, 0.0f, 1.0f,   // normal
-	//	1.0f, 0.0f, 0.0f, 0.3f, // color
-
-	//	0.5f, -0.5f, 0.0f,
-	//	0.0f, 0.0f, 1.0f,
-	//	1.0f, 1.0f, 0.0f, 0.3f,
-
-	//	0.0f, 0.5f, 0.0f,
-	//	0.0f, 0.0f, 1.0f,
-	//	0.0f, 0.0f, 1.0f, 0.3f
-	//};
 
 	std::vector<GLfloat> textured_rectangle_vertices{
 		// vertex 1
@@ -186,7 +170,7 @@ int main(int argc, char** argv)
 
 	// load and generate the texture
 	int width, height, nrChannels;
-	unsigned char* data = stbi_load("../assets/texture.png", &width, &height, &nrChannels, 0);
+	unsigned char* data = stbi_load(texture_path.c_str(), &width, &height, &nrChannels, 0);
 	if (data)
 	{
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);

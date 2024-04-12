@@ -21,6 +21,7 @@ For the sake of this project, the build was generated in Visual Studio 2022 and 
 ## Run
 *For the scope of this project, all paths and objects are hard-coded into the program. 
 However, feel free to play with the code as much as your heart desires. It's very simplistic and the classes are simple to use (albeit not very well encapsulated).*
+
 Run with no command line arguments.
 
 ## Controls:

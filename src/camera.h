@@ -18,7 +18,7 @@ namespace btoleda
 	class camera
 	{
 	public:
-		camera(const glm::vec3&, const glm::vec3&, const float fov, const float aspect_ratio, const float yaw = 90.0f, const float pitch = 0.0f);
+		camera(const glm::vec3&, const glm::vec3&, const float fov, const float aspect_ratio, const float yaw = -90.0f, const float pitch = 0.0f);
 		~camera();
 
 		glm::mat4 view() const;

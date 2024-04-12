@@ -17,8 +17,8 @@
 #include "framebuffer.h"
 #include "window.h"
 
-#define TINYOBJLOADER_IMPLEMENTATION
-#include <tiny_obj_loader.h>
+//#define TINYOBJLOADER_IMPLEMENTATION
+//#include <tiny_obj_loader.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -27,7 +27,7 @@ namespace btoleda {
 	// Build a camera
 	const int g_width = 1024;
 	const int g_height = 768;
-	camera g_cam{ { 0.0f, 1.0f, -4.0f }, { 0.0f, 1.0f, 0.0f }, 90, (float)g_width / g_height };
+	camera g_cam{ { 0.0f, 1.0f, 4.0f }, { 0.0f, 1.0f, 0.0f }, 90, (float)g_width / g_height };
 	float g_last_frame = 0;
 
 	int g_rendermode = 0;
@@ -181,6 +181,9 @@ int main(int argc, char** argv)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	
+	stbi_set_flip_vertically_on_load(true);
+
 	// load and generate the texture
 	int width, height, nrChannels;
 	unsigned char* data = stbi_load("../assets/texture.png", &width, &height, &nrChannels, 0);
@@ -328,7 +331,7 @@ int main(int argc, char** argv)
 		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_BLEND);
 		glDepthMask(GL_TRUE);
-		glClearColor(0.14f, 0.0f, 0.4f, 1.0f);
+		glClearColor(0.2f, 0.3f, 0.35f, 1.0f);
 
 		// First pass
 		glBindFramebuffer(GL_FRAMEBUFFER, fb[0]);

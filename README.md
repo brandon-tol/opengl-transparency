@@ -27,5 +27,4 @@ Run with no command line arguments.
 * `1`-`5` will display that "depth layer" which is being rendered (with 1 being the first and frontmost and 5 being the furthest back).
 * `0` will reset to blend all 5 layers togther.
 * `-` will toggle single layer mode and accumulation mode (where `2` will display only the first 2 layers blended in accumulation, but will only display strictly the second layer in single layer mode).
-
-`ESC` to exit
+* `ESC` to exit

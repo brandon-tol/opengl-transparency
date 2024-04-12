@@ -30,7 +30,7 @@ namespace btoleda {
 	camera g_cam{ { 0.0f, 1.0f, 4.0f }, { 0.0f, 1.0f, 0.0f }, 90, (float)g_width / g_height };
 	float g_last_frame = 0;
 
-	int g_rendermode = 0;
+	int g_rendermode = -5;
 
 	std::map<int, bool> g_keydown;
 
@@ -90,7 +90,7 @@ int main(int argc, char** argv)
 	//	0.0f, 0.0f, 1.0f, 0.3f
 	//};
 
-	std::vector<GLfloat> triangle_vertices{
+	std::vector<GLfloat> textured_rectangle_vertices{
 		// vertex 1
 		-0.5f, -0.5f, 0.0f, // coords
 		0.0f, 0.0f, 1.0f,   // normal
@@ -111,13 +111,13 @@ int main(int argc, char** argv)
 
 	};
 
-	std::vector<GLuint> triangle_indices{
+	std::vector<GLuint> textured_rectangle_indices {
 		// Triangle 1
 		0, 1, 2,
 		2, 1, 3
 	};
 
-	mesh triangle{ triangle_vertices, triangle_indices, true };
+	mesh textured_rectangle{ textured_rectangle_vertices, textured_rectangle_indices, true };
 	// ---------------------------------------------------
 
 	// Screen mesh --------------------------------------
@@ -200,8 +200,8 @@ int main(int argc, char** argv)
 	glActiveTexture(GL_TEXTURE0);
 	// ---------------------------------------------------
 
-	const auto render_triangles = [&model, &modelview, &triangle](shader_program& prog) {
-		glBindVertexArray(triangle);
+	const auto render_quads = [&model, &modelview, &textured_rectangle](shader_program& prog) {
+		glBindVertexArray(textured_rectangle);
 		int n = 5;
 		for (int i = 0; i < n; i++)
 		{
@@ -214,10 +214,20 @@ int main(int argc, char** argv)
 				prog.set_uniform(uniform_type::MAT4, "u_perspective", &perspective);
 				prog.set_uniform(uniform_type::INT, "u_texture", (void*)1);
 				glUseProgram(prog);
-				glDrawElements(GL_TRIANGLES, triangle.size, GL_UNSIGNED_INT, nullptr);
+				glDrawElements(GL_TRIANGLES, textured_rectangle.size, GL_UNSIGNED_INT, nullptr);
 				BTOLEDA_DEBUG_GL();
 			}
 		}
+		// render intersecting quads behind
+		model = glm::translate(glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3{ 0.0f, 1.0f, 0.0f }), glm::vec3{ 0.0f, 0.0f, 3.0f });
+		modelview = g_cam.view() * model;
+		prog.set_uniform(uniform_type::MAT4, "u_modelview", &modelview);
+		glm::mat4 perspective = g_cam.perspective();
+		prog.set_uniform(uniform_type::MAT4, "u_perspective", &perspective);
+		prog.set_uniform(uniform_type::INT, "u_texture", (void*)1);
+		glUseProgram(prog);
+		glDrawElements(GL_TRIANGLES, textured_rectangle.size, GL_UNSIGNED_INT, nullptr);
+		BTOLEDA_DEBUG_GL();
 		};
 
 	glfwSetKeyCallback(win, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -308,7 +318,7 @@ int main(int argc, char** argv)
 	{
 		float delta = glfwGetTime() - g_last_frame;
 		g_last_frame = glfwGetTime();
-		auto render = render_triangles;
+		auto render = render_quads;
 		if (g_keydown[GLFW_KEY_W]) {
 			g_cam.move(FORWARD, g_cam.speed() * delta);
 		}
@@ -366,13 +376,7 @@ int main(int argc, char** argv)
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 			glClear(GL_COLOR_BUFFER_BIT);
-			glBindVertexArray(screen);
-			for (int i = num_passes - 1; i >= 0; i--)
-			{
-				glBindTexture(GL_TEXTURE_2D, fb[i].frame());
-				glDrawElements(GL_TRIANGLES, screen.size, GL_UNSIGNED_INT, nullptr);
-
-			}
+			render(simple);
 		}
 		else if (g_rendermode < 0)
 		{

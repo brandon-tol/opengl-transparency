@@ -56,17 +56,21 @@ set(SRC
     src/shader_program.cpp
     src/mesh.cpp
     src/camera.cpp
-    src/ping_pong_framebuffer.cpp
+    src/framebuffer.cpp
+    src/window.cpp
 )
 
 set(HEADERS
     src/shader_program.h
     src/mesh.h
     src/camera.h
-    src/ping_pong_framebuffer.h
     src/core.h
+    src/framebuffer.h
+    src/window.h
 )
 
+# file(GLOB EXTERNALS external/*.cpp external/*.h)
+include_directories(external)
 
 
 # NOTE: ENCS glm installation is missing links to *.inl files so we need this line
@@ -77,10 +81,3 @@ add_executable(${PROJECT_NAME} ${SRC} ${HEADERS})
 target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC CMAKE_FILEPATH=\"${PROJECT_SOURCE_DIR}/\")
-
-file(COPY
-    shaders/simple.vert.glsl
-    shaders/simple.frag.glsl
-    DESTINATION
-    ${CMAKE_BINARY_DIR}
-)

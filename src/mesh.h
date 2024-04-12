@@ -14,7 +14,7 @@ namespace btoleda {
 	class mesh
 	{
 	public:
-		mesh(const std::vector<GLfloat>&, const std::vector<GLuint>&);
+		mesh(const std::vector<GLfloat>&, const std::vector<GLuint>&, bool textured);
 		~mesh();
 		operator GLuint() const;
 
@@ -22,6 +22,7 @@ namespace btoleda {
 		GLuint m_vao;
 		GLuint m_vbo;
 		GLuint m_ebo;
+		bool m_textured;
 
 	public:
 		const size_t size;

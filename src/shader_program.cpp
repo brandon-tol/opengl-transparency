@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include <glm/gtc/type_ptr.hpp>
+#include "core.h"
 
 namespace btoleda
 {
@@ -22,7 +23,28 @@ namespace btoleda
         glShaderSource(fragment_shader, 1, &frag_cstr, nullptr);
 
         glCompileShader(vertex_shader);
+        
+        // Check for Vertex shader compiler errors
+        int success;
+        char infoLog[512];
+        glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
+        if (!success)
+        {
+            glGetShaderInfoLog(m_program_id, 512, NULL, infoLog);
+            std::cerr << vert << "::Vertex shader compilation failed...\n"
+                << infoLog << std::endl;
+            throw std::runtime_error("Vertex shader compilation failed.");
+        }
+
         glCompileShader(fragment_shader);
+        glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
+        if (!success)
+        {
+            glGetShaderInfoLog(m_program_id, 512, NULL, infoLog);
+            std::cerr << frag << "::Fragment shader compilation failed...\n"
+                << infoLog << std::endl;
+            throw std::runtime_error("Fragment shader compilation failed.");
+        }
 
         m_program_id = glCreateProgram();
         glAttachShader(m_program_id, vertex_shader);
@@ -30,14 +52,13 @@ namespace btoleda
         glLinkProgram(m_program_id);
 
         // check for linking errors
-        int success;
-        char infoLog[512];
         glGetProgramiv(m_program_id, GL_LINK_STATUS, &success);
         if (!success)
         {
             glGetProgramInfoLog(m_program_id, 512, NULL, infoLog);
             std::cerr << "Shader program linking failed...\n"
                       << infoLog << std::endl;
+            throw std::runtime_error("Shader program linking failed...");
         }
 
         glDeleteShader(vertex_shader);
@@ -89,6 +110,7 @@ namespace btoleda
 
     void shader_program::set_uniform(uniform_type t, const std::string& name, void *value)
     {
+        glUseProgram(m_program_id);
         auto location = glGetUniformLocation(m_program_id, name.c_str());
         if (location < 0)
         {
@@ -99,12 +121,15 @@ namespace btoleda
         {
         case uniform_type::MAT4:
             glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(*(glm::mat4*)value));
-            return;
+            break;
 
         case uniform_type::INT:
             glUniform1i(location, (int)value);
-            return;
+            break;
+        case uniform_type::VEC2:
+            glUniform2fv(location, 1, glm::value_ptr(*(glm::mat4*)value));
         }
+        glUseProgram(0);
     }
 
 }

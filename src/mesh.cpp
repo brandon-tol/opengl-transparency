@@ -2,8 +2,10 @@
 
 namespace btoleda
 {
-	mesh::mesh(const std::vector<GLfloat>& vertices, const std::vector<GLuint>& indices) : size{indices.size()}
+	mesh::mesh(const std::vector<GLfloat>& vertices, const std::vector<GLuint>& indices, bool textured) : size{indices.size()}, m_textured{textured}
 	{
+		int stride = textured ? 8 : 10;
+		int color_size = textured ? 2 : 4;
 		glGenVertexArrays(1, &m_vao);
 		glGenBuffers(1, &m_vbo);
 		glGenBuffers(1, &m_ebo);
@@ -16,13 +18,13 @@ namespace btoleda
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
 
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(GLfloat), (void *)(0 * sizeof(GLfloat)));
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride * sizeof(GLfloat), (void *)(0 * sizeof(GLfloat)));
 		glEnableVertexAttribArray(0);
 
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(GLfloat), (void *)(3 * sizeof(GLfloat)));
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride * sizeof(GLfloat), (void *)(3 * sizeof(GLfloat)));
 		glEnableVertexAttribArray(1);
 
-		glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 10 * sizeof(GLfloat), (void*)(6 * sizeof(GLfloat)));
+		glVertexAttribPointer(2, color_size, GL_FLOAT, GL_FALSE, stride * sizeof(GLfloat), (void*)(6 * sizeof(GLfloat)));
 		glEnableVertexAttribArray(2);
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);

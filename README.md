@@ -30,6 +30,9 @@ Otherwise, run with no command line arguments and the default texture will be ap
 * `1`-`5` will display that "depth layer" which is being rendered (with 1 being the first and frontmost and 5 being the furthest back).
   * (By default, 5 layers will be shown).
 * `0` will display what the image looks like without depth peeling enabled.
-* `-` will toggle single layer mode and accumulation mode (where `2` will display only the first 2 layers blended in accumulation, but will only display strictly the second layer in single layer mode).
+* `-` will toggle single layer mode and accumulation mode
+ * For example, `2` will display only the first 2 layers blended in accumulation,
+ * but will only display strictly the second layer (and not the first later) in single layer mode.
+ * By default, the program will be in 'accumulation' mode
 * `W`, `A`, `S`, `D` to move through the space, using `SPACEBAR` and `LEFT CONTROL` to fly up and down, respectively
 * `ESC` to exit

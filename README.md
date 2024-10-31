@@ -31,4 +31,5 @@ Otherwise, run with no command line arguments and the default texture will be ap
   * (By default, 5 layers will be shown).
 * `0` will display what the image looks like without depth peeling enabled.
 * `-` will toggle single layer mode and accumulation mode (where `2` will display only the first 2 layers blended in accumulation, but will only display strictly the second layer in single layer mode).
+* `W`, `A`, `S`, `D` to move through the space, using `SPACEBAR` and `LEFT CONTROL` to fly up and down, respectively
 * `ESC` to exit
